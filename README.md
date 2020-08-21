@@ -1,1 +1,1 @@
-# redis-in-rust
+# Redis in Rust
