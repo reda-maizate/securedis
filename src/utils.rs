@@ -1,8 +1,8 @@
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
 
 use crate::structs::{CommandError, RESPElement, RESPObject};
-
+use crate::structs::{PING_COMMAND, GET_COMMAND, SET_COMMAND, ECHO_COMMAND};
 
 pub fn read_next_line(reader: &mut BufReader<TcpStream>, mut input: &mut String) -> String {
     input.clear();
@@ -52,76 +52,51 @@ pub fn concatenate_contents(resp_object: RESPObject) -> String {
     contents.trim().to_string()
 }
 
-pub fn process_commands(all_contents: String) -> Result<(), CommandError>{
+pub fn process_commands(all_contents: String) -> Result<String, CommandError> {
     let mut commands: Vec<&str> = all_contents.split(" ").collect();
     let command = commands.remove(0);
 
     match command {
-        "ECHO" => {
-            let words = commands.remove(0);
-            println!("ECHO {}", words);
-            Ok(())
+        ECHO_COMMAND => {
+            let message = commands.remove(0);
+            // TODO - Error handling:
+            // If message is out of bounds, return a CommandError::InvalidNumberOfArguments
+            // If everything is good, return a String with the message: "ECHO <message>"
+            Ok(format!("ECHO {}", message))
         }
-        "SET" => {
+        SET_COMMAND => {
             let key = commands.remove(0);
             let value = commands.remove(0);
-            println!("SET {} {}", key, value);
-            Ok(())
+            // TODO - Error handling:
+            // If key or value is out of bounds, return a CommandError::InvalidNumberOfArguments
+            // println!("SET {} {}", key, value);
+            Ok(format!("SET {} {}", key, value))
         }
-        "GET" => {
+        GET_COMMAND => {
             let key = commands.remove(0);
-            println!("GET {}", key);
-            Ok(())
+            // println!("GET {}", key);
+            Ok(format!("GET {}", key))
         }
-        "DEL" => {
-            let key = commands.remove(0);
-            println!("DEL {}", key);
-            Ok(())
-        }
-        "EXISTS" => {
-            let key = commands.remove(0);
-            println!("EXISTS {}", key);
-            Ok(())
-        }
-        "EXPIRE" => {
-            let key = commands.remove(0);
-            let seconds = commands.remove(0);
-            println!("EXPIRE {} {}", key, seconds);
-            Ok(())
-        }
-        "TTL" => {
-            let key = commands.remove(0);
-            println!("TTL {}", key);
-            Ok(())
-        }
-        "KEYS" => {
-            let pattern = commands.remove(0);
-            println!("KEYS {}", pattern);
-            Ok(())
-        }
-        "FLUSHDB" => {
-            println!("FLUSHDB");
-            Ok(())
-        }
-        "FLUSHALL" => {
-            println!("FLUSHALL");
-            Ok(())
-        }
-        "DBSIZE" => {
-            println!("DBSIZE");
-            Ok(())
-        }
-        "PING" => {
-            println!("PONG");
-            Ok(())
-        }
-        "QUIT" => {
-            println!("QUIT");
-            Ok(())
+        PING_COMMAND => {
+            // println!("PONG");
+            Ok(format!("PONG"))
         }
         _ => {
-            println!("Command not found");
-            Ok(())
+            Err(CommandError::InvalidCommand { message: "Invalid command".to_string() })
         }
     }
+}
+
+pub fn send_response(mut stream: TcpStream, raw_response: String) {
+    let response = serialize_response(raw_response);
+    println!("Response: {}", response.clone());
+    stream.write(response.as_bytes()).unwrap();
+}
+
+pub fn serialize_response(response: String) -> String {
+    let mut serialized_response: String = String::new();
+    serialized_response.push_str("+");
+    serialized_response.push_str(&response);
+    serialized_response.push_str("\r\n");
+    serialized_response
 }

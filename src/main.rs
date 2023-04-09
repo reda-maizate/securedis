@@ -10,8 +10,8 @@ use structs::{RESP_ARRAY_SYMBOL,
               RESP_INTEGER_SYMBOL,
               RESP_ERROR_SYMBOL,
               RESP_SIMPLE_STRING_SYMBOL};
-use crate::structs::RESPHeaderType;
-use crate::utils::{concatenate_contents, get_last_element, process_commands};
+use crate::structs::{CommandError, RESPHeaderType};
+use crate::utils::{concatenate_contents, get_last_element, process_commands, send_response};
 
 
 fn read_header(input: &mut String) -> RESPElement {
@@ -66,7 +66,7 @@ fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) {
     }
 }
 
-fn process_request(mut _request: RESPObject) -> () {
+fn process_request(mut _request: RESPObject) -> Result<String, CommandError> {
     /* TODO:
      1. Concatenate all the content of the elements
      2. Check for specific commands
@@ -76,12 +76,13 @@ fn process_request(mut _request: RESPObject) -> () {
     */
     let all_contents = concatenate_contents(_request);
     // println!("{}", all_contents);
-    process_commands(all_contents);
+    let output: Result<String, CommandError> = process_commands(all_contents);
+    output
 }
 
 
-fn handle_connection(stream: TcpStream) -> () {
-    let mut reader = BufReader::new(stream);
+fn handle_connection(stream: TcpStream) -> (TcpStream, Result<String, CommandError>) {
+    let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut input = String::new();
 
     let mut raw_header = read_next_line(&mut reader, &mut input);
@@ -97,19 +98,20 @@ fn handle_connection(stream: TcpStream) -> () {
         read_header_or_element(&mut new_parsed_line, &mut resp_object);
     }
 
-    process_request(resp_object.clone());
+    let output: Result<String, CommandError> = process_request(resp_object.clone());
+    (stream, output)
     // println!("{:#?}", resp_object);
 }
 
 fn main() {
     println!("Reda's redis server started...");
-
     let listener = TcpListener::bind("127.0.0.1:6379").unwrap();
 
     for stream in listener.incoming() {
         match stream {
             Ok(mut _stream) => {
-                handle_connection(_stream)
+                let (mut stream, output) = handle_connection(_stream);
+                send_response(stream, output.unwrap());
             }
             Err(e) => {
                 println!("error: {}", e);

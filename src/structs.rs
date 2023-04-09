@@ -1,8 +1,15 @@
+use std::fmt::{Display, Formatter};
+
 pub const RESP_ARRAY_SYMBOL: char = '*';
 pub const RESP_BULK_STRING_SYMBOL: char = '$';
 pub const RESP_INTEGER_SYMBOL: char = ':';
 pub const RESP_ERROR_SYMBOL: char = '-';
 pub const RESP_SIMPLE_STRING_SYMBOL: char = '+';
+
+pub const ECHO_COMMAND: &str = "ECHO";
+pub const SET_COMMAND: &str = "SET";
+pub const GET_COMMAND: &str = "GET";
+pub const PING_COMMAND: &str = "PING";
 
 
 #[derive(Debug, Copy, Clone)]
@@ -32,10 +39,11 @@ pub enum RESPHeaderType {
 
 #[derive(Debug)]
 pub enum CommandError {
-    InvalidCommand,
-    InvalidNumberOfArguments,
-    InvalidArgument,
+    InvalidCommand { message: String },
+    InvalidNumberOfArguments { message: String },
+    InvalidArgument { message: String },
 }
+
 
 impl RESPObject {
     pub fn new() -> RESPObject {
@@ -44,7 +52,6 @@ impl RESPObject {
         }
     }
 }
-
 
 impl From<Vec<char>> for RESPElement {
     fn from(str: Vec<char>) -> RESPElement {
@@ -61,7 +68,7 @@ impl From<RESPHeader> for RESPElement {
         RESPElement {
             header: RESPHeader {
                 resp_type: header.resp_type,
-                num_of_elements: header.num_of_elements
+                num_of_elements: header.num_of_elements,
             },
             content: None,
         }
