@@ -5,6 +5,12 @@ use std::io::{BufReader};
 use std::net::{TcpListener, TcpStream};
 use utils::{read, read_next_line};
 use structs::{RESPObject, RESPElement, RESPHeader};
+use structs::{RESP_ARRAY_SYMBOL,
+              RESP_BULK_STRING_SYMBOL,
+              RESP_INTEGER_SYMBOL,
+              RESP_ERROR_SYMBOL,
+              RESP_SIMPLE_STRING_SYMBOL};
+use crate::utils::get_last_element;
 
 
 fn read_header(input: &mut String) -> RESPElement {
@@ -15,31 +21,31 @@ fn read_header(input: &mut String) -> RESPElement {
 
 fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) -> () {
     let cleaned_chars = read(input);
-    let last_element = resp_object.elements.as_mut().unwrap();
+    let mut last_element = get_last_element(resp_object);
 
     // Check if this line is a header or an element
     match cleaned_chars[0] {
-        '*' => {
+        RESP_ARRAY_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
             last_element.next = Box::new(Some(element.clone()));
         }
-        '$' => {
+        RESP_BULK_STRING_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
             last_element.next = Box::new(Some(element.clone()));
         }
-        ':' => {
+        RESP_INTEGER_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
             last_element.next = Box::new(Some(element.clone()));
         }
-        '-' => {
+        RESP_ERROR_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
             last_element.next = Box::new(Some(element.clone()));
         }
-        '+' => {
+        RESP_SIMPLE_STRING_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
             last_element.next = Box::new(Some(element.clone()));
