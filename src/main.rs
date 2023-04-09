@@ -10,6 +10,7 @@ use structs::{RESP_ARRAY_SYMBOL,
               RESP_INTEGER_SYMBOL,
               RESP_ERROR_SYMBOL,
               RESP_SIMPLE_STRING_SYMBOL};
+use crate::structs::RESPHeaderType;
 use crate::utils::get_last_element;
 
 
@@ -19,40 +20,47 @@ fn read_header(input: &mut String) -> RESPElement {
     header.into()
 }
 
-fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) -> () {
+fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) {
     let cleaned_chars = read(input);
-    let mut last_element = get_last_element(resp_object);
 
     // Check if this line is a header or an element
     match cleaned_chars[0] {
         RESP_ARRAY_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
-            last_element.next = Box::new(Some(element.clone()));
+            resp_object.elements.push(Some(element));
         }
         RESP_BULK_STRING_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
-            last_element.next = Box::new(Some(element.clone()));
+            resp_object.elements.push(Some(element));
         }
         RESP_INTEGER_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
-            last_element.next = Box::new(Some(element.clone()));
+            resp_object.elements.push(Some(element));
         }
         RESP_ERROR_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
-            last_element.next = Box::new(Some(element.clone()));
+            resp_object.elements.push(Some(element));
         }
         RESP_SIMPLE_STRING_SYMBOL => {
             let header: RESPHeader = cleaned_chars.into();
             let element: RESPElement = header.into();
-            last_element.next = Box::new(Some(element.clone()));
+            resp_object.elements.push(Some(element));
         }
         // This is an element
-        'A'..='Z' | 'a'..='z' | '0'..='9' => {
-            last_element.content = Some(cleaned_chars.into_iter().collect());
+        'A'..='Z' | 'a'..='z' => {
+            let mut last_element = get_last_element(resp_object).unwrap();
+            let chars_to_str: String = cleaned_chars.into_iter().collect();
+            last_element.content = Some(chars_to_str);
+        }
+        '0'..='9' => {
+            let mut last_element = get_last_element(resp_object).unwrap();
+            let chars_to_str: String = cleaned_chars.into_iter().collect();
+            last_element.header.resp_type = Some(RESPHeaderType::Integer);
+            last_element.content = Some(chars_to_str);
         }
         _ => panic!("Unknown type of data"),
     }
@@ -73,7 +81,7 @@ fn handle_connection(stream: TcpStream) -> () {
     // Parse and print the first type and number of elements
     let mut resp_object = RESPObject::new();
     let first_resp_element = read_header(&mut raw_header);
-    resp_object.elements = Some(first_resp_element.clone());
+    resp_object.elements.push(Some(first_resp_element.clone()));
 
     // Read the elements and headers of next lines
     for _ in 0..first_resp_element.header.num_of_elements.unwrap() {

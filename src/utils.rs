@@ -1,6 +1,8 @@
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
+
 use crate::structs::{RESPElement, RESPObject};
+
 
 pub fn read_next_line(reader: &mut BufReader<TcpStream>, mut input: &mut String) -> String {
     input.clear();
@@ -22,12 +24,9 @@ pub fn read(input: &mut String) -> Vec<char> {
     raw_chars
 }
 
-// TODO: The function below get the last element of the linked list resp_object.elements
-pub fn get_last_element(resp_object: &mut RESPObject) -> Option<RESPElement> {
-    let mut last_element = resp_object.elements.clone();
-
-    while last_element.next.is_some() {
-        last_element = Some(last_element.next)?;
+pub fn get_last_element(resp_object: &mut RESPObject) -> Option<&mut RESPElement> {
+    match resp_object.elements.len() {
+        0 => None,
+        n => resp_object.elements[n - 1].as_mut(),
     }
-    last_element.clone()
 }

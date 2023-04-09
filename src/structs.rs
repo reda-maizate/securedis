@@ -13,14 +13,13 @@ pub struct RESPHeader {
 
 #[derive(Debug)]
 pub struct RESPObject {
-    pub elements: Option<RESPElement>,
+    pub elements: Vec<Option<RESPElement>>,
 }
 
 #[derive(Debug, Clone)]
 pub struct RESPElement {
     pub header: RESPHeader,
     pub content: Option<String>,
-    pub next: Box<Option<RESPElement>>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -35,7 +34,7 @@ pub enum RESPHeaderType {
 impl RESPObject {
     pub fn new() -> RESPObject {
         RESPObject {
-            elements: None,
+            elements: Vec::new(),
         }
     }
 }
@@ -47,7 +46,6 @@ impl From<Vec<char>> for RESPElement {
         RESPElement {
             header: RESPHeader { resp_type: None, num_of_elements: None },
             content: Some(content),
-            next: Box::new(None),
         }
     }
 }
@@ -60,7 +58,6 @@ impl From<RESPHeader> for RESPElement {
                 num_of_elements: header.num_of_elements
             },
             content: None,
-            next: Box::new(None),
         }
     }
 }
