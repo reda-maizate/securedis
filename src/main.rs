@@ -11,7 +11,7 @@ use structs::{RESP_ARRAY_SYMBOL,
               RESP_ERROR_SYMBOL,
               RESP_SIMPLE_STRING_SYMBOL};
 use crate::structs::RESPHeaderType;
-use crate::utils::get_last_element;
+use crate::utils::{concatenate_contents, get_last_element, process_commands};
 
 
 fn read_header(input: &mut String) -> RESPElement {
@@ -66,9 +66,17 @@ fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) {
     }
 }
 
-#[allow(dead_code)]
-fn process_request(_request: RESPObject) -> () {
-    // TODO: Implement this but first we need to implement the RESP struct
+fn process_request(mut _request: RESPObject) -> () {
+    /* TODO:
+     1. Concatenate all the content of the elements
+     2. Check for specific commands
+     3a. If command is not found, return an error
+     3b. If command is found, process the command
+     4. Return the result
+    */
+    let all_contents = concatenate_contents(_request);
+    // println!("{}", all_contents);
+    process_commands(all_contents);
 }
 
 
@@ -88,7 +96,9 @@ fn handle_connection(stream: TcpStream) -> () {
         let mut new_parsed_line = read_next_line(&mut reader, &mut input);
         read_header_or_element(&mut new_parsed_line, &mut resp_object);
     }
-    println!("{:#?}", resp_object);
+
+    process_request(resp_object.clone());
+    // println!("{:#?}", resp_object);
 }
 
 fn main() {

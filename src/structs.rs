@@ -11,7 +11,7 @@ pub struct RESPHeader {
     pub num_of_elements: Option<i32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RESPObject {
     pub elements: Vec<Option<RESPElement>>,
 }
@@ -27,8 +27,14 @@ pub enum RESPHeaderType {
     Array,
     BulkString,
     Integer,
-    Error,
     SimpleString,
+}
+
+#[derive(Debug)]
+pub enum CommandError {
+    InvalidCommand,
+    InvalidNumberOfArguments,
+    InvalidArgument,
 }
 
 impl RESPObject {
@@ -69,7 +75,6 @@ impl From<char> for RESPHeaderType {
             RESP_ARRAY_SYMBOL => RESPHeaderType::Array,
             RESP_BULK_STRING_SYMBOL => RESPHeaderType::BulkString,
             RESP_INTEGER_SYMBOL => RESPHeaderType::Integer,
-            RESP_ERROR_SYMBOL => RESPHeaderType::Error,
             RESP_SIMPLE_STRING_SYMBOL => RESPHeaderType::SimpleString,
             _ => panic!("Invalid type of data"),
         }
