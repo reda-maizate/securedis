@@ -34,6 +34,7 @@ pub enum RESPHeaderType {
     Array,
     BulkString,
     Integer,
+    Error,
     SimpleString,
 }
 
@@ -78,10 +79,12 @@ impl From<RESPHeader> for RESPElement {
 
 impl From<char> for RESPHeaderType {
     fn from(c: char) -> RESPHeaderType {
+        // println!("c: {}", c);
         match c {
             RESP_ARRAY_SYMBOL => RESPHeaderType::Array,
             RESP_BULK_STRING_SYMBOL => RESPHeaderType::BulkString,
             RESP_INTEGER_SYMBOL => RESPHeaderType::Integer,
+            RESP_ERROR_SYMBOL => RESPHeaderType::Error,
             RESP_SIMPLE_STRING_SYMBOL => RESPHeaderType::SimpleString,
             _ => panic!("Invalid type of data"),
         }

@@ -1,7 +1,7 @@
 mod structs;
 mod utils;
 
-use std::io::{BufReader};
+use std::io::{BufReader, Read};
 use std::net::{TcpListener, TcpStream};
 use utils::{read, read_next_line};
 use structs::{RESPObject, RESPElement, RESPHeader};
@@ -16,12 +16,14 @@ use crate::utils::{concatenate_contents, get_last_element, process_commands, sen
 
 fn read_header(input: &mut String) -> RESPElement {
     let cleaned_chars = read(input);
+    // println!("Cleaned chars: {:?}", cleaned_chars);
     let header: RESPHeader = cleaned_chars.into();
     header.into()
 }
 
 fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) {
     let cleaned_chars = read(input);
+    // println!("Cleaned chars: {:?}", cleaned_chars);
 
     // Check if this line is a header or an element
     match cleaned_chars[0] {
@@ -66,7 +68,7 @@ fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) {
     }
 }
 
-fn process_request(mut _request: RESPObject) -> Result<String, CommandError> {
+fn process_request(mut _request: RESPObject) -> Option<String> {
     /* TODO:
      1. Concatenate all the content of the elements
      2. Check for specific commands
@@ -76,12 +78,12 @@ fn process_request(mut _request: RESPObject) -> Result<String, CommandError> {
     */
     let all_contents = concatenate_contents(_request);
     // println!("{}", all_contents);
-    let output: Result<String, CommandError> = process_commands(all_contents);
+    let output: Option<String> = process_commands(all_contents);
     output
 }
 
 
-fn handle_connection(stream: TcpStream) -> (TcpStream, Result<String, CommandError>) {
+fn handle_connection(mut stream: TcpStream) -> (TcpStream, Option<String>) {
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut input = String::new();
 
@@ -95,12 +97,13 @@ fn handle_connection(stream: TcpStream) -> (TcpStream, Result<String, CommandErr
     // Read the elements and headers of next lines
     for _ in 0..first_resp_element.header.num_of_elements.unwrap() {
         let mut new_parsed_line = read_next_line(&mut reader, &mut input);
+        // println!("New parsed line: {:?}", new_parsed_line);
         read_header_or_element(&mut new_parsed_line, &mut resp_object);
     }
-
-    let output: Result<String, CommandError> = process_request(resp_object.clone());
-    (stream, output)
     // println!("{:#?}", resp_object);
+
+    let output: Option<String> = process_request(resp_object.clone());
+    (stream, output)
 }
 
 fn main() {
@@ -109,9 +112,9 @@ fn main() {
 
     for stream in listener.incoming() {
         match stream {
-            Ok(mut _stream) => {
-                let (mut stream, output) = handle_connection(_stream);
-                send_response(stream, output.unwrap());
+            Ok(mut _stream) => loop {
+                let (mut stream, output) = handle_connection(_stream.try_clone().unwrap());
+                send_response(stream, output);
             }
             Err(e) => {
                 println!("error: {}", e);
