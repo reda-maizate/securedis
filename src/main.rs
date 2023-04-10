@@ -88,7 +88,12 @@ fn handle_connection(mut stream: TcpStream) -> (TcpStream, Option<String>) {
     let mut input = String::new();
 
     let mut raw_header = read_next_line(&mut reader, &mut input);
-
+    match raw_header.is_empty() {
+            false => {  }
+            true => {
+                return (stream, None);
+            }
+        }
     // Parse and print the first type and number of elements
     let mut resp_object = RESPObject::new();
     let first_resp_element = read_header(&mut raw_header);

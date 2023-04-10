@@ -8,7 +8,7 @@ pub fn read_next_line(reader: &mut BufReader<TcpStream>, mut input: &mut String)
     input.clear();
     reader
         .read_line(&mut input)
-        .unwrap();
+        .unwrap_or(0);
 
     // println!("Next line: {:?}", nxt);
     input.to_string()
@@ -97,7 +97,7 @@ pub fn process_commands(all_contents: String) -> Option<String> {
 pub fn send_response(mut stream: TcpStream, raw_response: Option<String>) {
     let response = serialize_response(raw_response);
     // println!("Response: {}", response.clone());
-    stream.write(response.as_bytes()).unwrap();
+    stream.write(response.as_bytes()).unwrap_or(0);
 }
 
 pub fn serialize_response(response: Option<String>) -> String {
