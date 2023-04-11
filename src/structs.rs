@@ -43,7 +43,6 @@ pub enum RESPHeaderType {
 pub enum CommandError {
     InvalidCommand { message: String },
     InvalidNumberOfArguments { message: String },
-    InvalidArgument { message: String },
 }
 
 impl Display for CommandError {
@@ -51,7 +50,6 @@ impl Display for CommandError {
         match self {
             CommandError::InvalidCommand { message } => write!(f, "{}", message),
             CommandError::InvalidNumberOfArguments { message } => write!(f, "{}", message),
-            CommandError::InvalidArgument { message } => write!(f, "{}", message),
         }
     }
 }

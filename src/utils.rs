@@ -72,12 +72,12 @@ pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandE
         //     let value = commands.remove(0);
         //     // TODO - Error handling:
         //     // If key or value is out of bounds, return a CommandError::InvalidNumberOfArguments
-        //     // println!("SET {} {}", key, value);
+        //     // debug!("SET {} {}", key, value);
         //     Ok(format!("SET {} {}", key, value))
         // }
         // GET_COMMAND => {
         //     let key = commands.remove(0);
-        //     // println!("GET {}", key);
+        //     // debug!("GET {}", key);
         //     Ok(format!("GET {}", key))
         // }
         PING_COMMAND => {

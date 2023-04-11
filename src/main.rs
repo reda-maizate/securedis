@@ -5,8 +5,7 @@ extern crate env_logger;
 extern crate log;
 
 use env_logger::Builder;
-use log::{debug, error, info, warn};
-use chrono::Utc;
+use log::{debug, error, info};
 use std::io::{BufReader, Read};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
@@ -75,7 +74,7 @@ fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) {
             last_element.header.resp_type = Some(RESPHeaderType::Integer);
             last_element.content = Some(chars_to_str);
         }
-        _ => panic!("Unknown type of data"),
+        _ => error!("Unknown type of data"),
     }
 }
 
