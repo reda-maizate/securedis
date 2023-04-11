@@ -18,14 +18,12 @@ use crate::utils::{concatenate_contents, get_last_element, process_commands, sen
 
 fn read_header(input: &mut String) -> RESPElement {
     let cleaned_chars = read(input);
-    // println!("Cleaned chars: {:?}", cleaned_chars);
     let header: RESPHeader = cleaned_chars.into();
     header.into()
 }
 
 fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) {
     let cleaned_chars = read(input);
-    // println!("Cleaned chars: {:?}", cleaned_chars);
 
     // Check if this line is a header or an element
     match cleaned_chars[0] {
@@ -70,22 +68,13 @@ fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) {
     }
 }
 
-fn process_request(mut _request: RESPObject) -> Option<String> {
-    /* TODO:
-     1. Concatenate all the content of the elements
-     2. Check for specific commands
-     3a. If command is not found, return an error
-     3b. If command is found, process the command
-     4. Return the result
-    */
+fn process_request(mut _request: RESPObject) -> Result<Option<String>, CommandError> {
     let all_contents = concatenate_contents(_request);
-    // println!("{}", all_contents);
-    let output: Option<String> = process_commands(all_contents);
-    output
+    process_commands(all_contents)
 }
 
 
-fn handle_connection(mut stream: TcpStream) -> (TcpStream, Option<String>) {
+fn handle_connection(mut stream: TcpStream) -> (TcpStream, Result<Option<String>, CommandError>) {
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut input = String::new();
 
@@ -93,7 +82,7 @@ fn handle_connection(mut stream: TcpStream) -> (TcpStream, Option<String>) {
     match raw_header.is_empty() {
             false => {  }
             true => {
-                return (stream, None);
+                return (stream, Ok(None));
             }
         }
     // Parse and print the first type and number of elements
@@ -104,12 +93,10 @@ fn handle_connection(mut stream: TcpStream) -> (TcpStream, Option<String>) {
     // Read the elements and headers of next lines
     for _ in 0..first_resp_element.header.num_of_elements.unwrap() {
         let mut new_parsed_line = read_next_line(&mut reader, &mut input);
-        // println!("New parsed line: {:?}", new_parsed_line);
         read_header_or_element(&mut new_parsed_line, &mut resp_object);
     }
-    // println!("{:#?}", resp_object);
 
-    let output: Option<String> = process_request(resp_object.clone());
+    let output: Result<Option<String>, CommandError> = process_request(resp_object.clone());
     (stream, output)
 }
 

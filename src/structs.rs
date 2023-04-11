@@ -1,3 +1,4 @@
+use std::fmt;
 use std::fmt::{Display, Formatter};
 
 pub const RESP_ARRAY_SYMBOL: char = '*';
@@ -45,6 +46,16 @@ pub enum CommandError {
     InvalidArgument { message: String },
 }
 
+impl Display for CommandError {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            CommandError::InvalidCommand { message } => write!(f, "{}", message),
+            CommandError::InvalidNumberOfArguments { message } => write!(f, "{}", message),
+            CommandError::InvalidArgument { message } => write!(f, "{}", message),
+        }
+    }
+}
+
 
 impl RESPObject {
     pub fn new() -> RESPObject {
@@ -79,7 +90,6 @@ impl From<RESPHeader> for RESPElement {
 
 impl From<char> for RESPHeaderType {
     fn from(c: char) -> RESPHeaderType {
-        // println!("c: {}", c);
         match c {
             RESP_ARRAY_SYMBOL => RESPHeaderType::Array,
             RESP_BULK_STRING_SYMBOL => RESPHeaderType::BulkString,
@@ -93,7 +103,6 @@ impl From<char> for RESPHeaderType {
 
 impl From<Vec<char>> for RESPHeader {
     fn from(s: Vec<char>) -> RESPHeader {
-        // println!("s: {:?}", s);
         let resp_type = s[0].into();
         let num_of_elements: i32 = s[1].to_digit(10).unwrap() as i32;
 

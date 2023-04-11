@@ -36,24 +36,21 @@ pub fn concatenate_contents(resp_object: RESPObject) -> String {
     let mut contents: String = String::new();
 
     for element in resp_object.elements {
-        match element {
-            Some(_element) => {
-                match _element.content {
-                    Some(_content) => {
-                        // Add a space between each element
-                        contents.push_str(&_content);
-                        contents.push_str(" ");
-                    }
-                    None => {}
+        if let Some(_element) = element {
+            match _element.content {
+                Some(_content) => {
+                    // Add a space between each element
+                    contents.push_str(&_content);
+                    contents.push_str(" ");
                 }
+                None => {}
             }
-            None => {}
         }
     }
     contents.trim().to_string()
 }
 
-pub fn process_commands(all_contents: String) -> Option<String> {
+pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandError> {
     let mut commands: Vec<&str> = all_contents.split(" ").collect();
     // println!("Commands: {:?}", commands);
     let maybe_lowercase_command = commands.remove(0).to_uppercase();
@@ -61,11 +58,13 @@ pub fn process_commands(all_contents: String) -> Option<String> {
 
     match command {
         ECHO_COMMAND => {
-            let message = commands.remove(0);
-            // TODO - Error handling:
-            // If message is out of bounds, return a CommandError::InvalidNumberOfArguments
-            // If everything is good, return a String with the message: "ECHO <message>"
-            Some(format!("ECHO {}", message))
+            // Check if enough arguments were passed
+            let message = check_arguments(commands, 1).ok();
+            match message {
+                Some(message) => Ok(Some(message.to_string())),
+                None => Err(CommandError::InvalidNumberOfArguments { message: "Invalid number of arguments".to_string() })
+            }
+            // Ok(message.to_string())
         }
         // SET_COMMAND => {
         //     let key = commands.remove(0);
@@ -82,42 +81,52 @@ pub fn process_commands(all_contents: String) -> Option<String> {
         // }
         PING_COMMAND => {
             // println!("returning: PONG");
-            Some(format!("PONG"))
+            Ok(Some("PONG".to_string()))
         }
         _ => {
             // TODO: In reality, here sending an error shut down the program. That's not what we want.
             // We want to send an error to the client and keep the server running.
             // Err(CommandError::InvalidCommand { message: "Invalid command".to_string() })
             // Ok((String::from("")))
-            None
+            Err(CommandError::InvalidCommand { message: "Invalid command".to_string() })
         }
     }
 }
 
-pub fn send_response(mut stream: TcpStream, raw_response: Option<String>) {
+pub fn send_response(mut stream: TcpStream, raw_response: Result<Option<String>, CommandError>) {
     let response = serialize_response(raw_response);
-    // println!("Response: {}", response.clone());
-    stream.write(response.as_bytes()).unwrap_or(0);
+    stream.write_all(response.as_bytes()).unwrap_or(());
 }
 
-pub fn serialize_response(response: Option<String>) -> String {
+pub fn serialize_response(response: Result<Option<String>, CommandError>) -> String {
     match response {
-        Some(_response) => {
+        Ok(Some(_response)) => {
             let mut serialized_response: String = String::new();
-            serialized_response.push_str("+");
+            serialized_response.push('+');
             serialized_response.push_str(&_response);
             serialized_response.push_str("\r\n");
             serialized_response
         }
-        None => {
+        Ok(None) => {
             let mut serialized_response: String = String::new();
-            serialized_response.push_str("-ERR unknown command\r\n");
+            serialized_response.push_str("");
+            serialized_response
+        }
+        Err(err) => {
+            let mut serialized_response: String = String::new();
+            serialized_response.push_str("-ERR ");
+            serialized_response.push_str(&err.to_string());
+            serialized_response.push_str("\r\n");
+            // println!("serialized_response: {:?}", serialized_response);
             serialized_response
         }
     }
-    // let mut serialized_response: String = String::new();
-    // serialized_response.push_str("+");
-    // serialized_response.push_str(&response);
-    // serialized_response.push_str("\r\n");
-    // serialized_response
+}
+
+pub fn check_arguments(mut commands: Vec<&str>, expected_num_of_arguments: usize) -> Result<&str, CommandError> {
+    if commands.len() < expected_num_of_arguments {
+        Err(CommandError::InvalidNumberOfArguments { message: "Invalid number of arguments".to_string() })
+    } else {
+        Ok(commands.remove(0))
+    }
 }
