@@ -1,5 +1,6 @@
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
+use log::debug;
 
 use crate::structs::{CommandError, RESPElement, RESPObject};
 use crate::structs::{PING_COMMAND, GET_COMMAND, SET_COMMAND, ECHO_COMMAND};
@@ -10,7 +11,7 @@ pub fn read_next_line(reader: &mut BufReader<TcpStream>, mut input: &mut String)
         .read_line(&mut input)
         .unwrap_or(0);
 
-    // println!("Next line: {:?}", nxt);
+    // debug!("Next line: {:?}", nxt);
     input.to_string()
 }
 
@@ -52,7 +53,7 @@ pub fn concatenate_contents(resp_object: RESPObject) -> String {
 
 pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandError> {
     let mut commands: Vec<&str> = all_contents.split(" ").collect();
-    // println!("Commands: {:?}", commands);
+    debug!("Commands: {:?}", commands);
     let maybe_lowercase_command = commands.remove(0).to_uppercase();
     let command: &str = maybe_lowercase_command.as_str();
 
@@ -80,7 +81,7 @@ pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandE
         //     Ok(format!("GET {}", key))
         // }
         PING_COMMAND => {
-            // println!("returning: PONG");
+            // debug!("returning: PONG");
             Ok(Some("PONG".to_string()))
         }
         _ => {
@@ -117,7 +118,7 @@ pub fn serialize_response(response: Result<Option<String>, CommandError>) -> Str
             serialized_response.push_str("-ERR ");
             serialized_response.push_str(&err.to_string());
             serialized_response.push_str("\r\n");
-            // println!("serialized_response: {:?}", serialized_response);
+            debug!("serialized_response: {:?}", serialized_response);
             serialized_response
         }
     }

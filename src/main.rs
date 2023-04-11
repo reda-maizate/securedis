@@ -1,6 +1,12 @@
 mod structs;
 mod utils;
 
+extern crate env_logger;
+extern crate log;
+
+use env_logger::Builder;
+use log::{debug, error, info, warn};
+use chrono::Utc;
 use std::io::{BufReader, Read};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
@@ -14,6 +20,11 @@ use structs::{RESP_ARRAY_SYMBOL,
               RESP_SIMPLE_STRING_SYMBOL};
 use crate::structs::{CommandError, RESPHeaderType};
 use crate::utils::{concatenate_contents, get_last_element, process_commands, send_response};
+
+fn configure_logger() {
+    let mut builder = Builder::from_env("LOGLEVEL");
+    builder.init();
+}
 
 
 fn read_header(input: &mut String) -> RESPElement {
@@ -70,6 +81,7 @@ fn read_header_or_element(input: &mut String, resp_object: &mut RESPObject) {
 
 fn process_request(mut _request: RESPObject) -> Result<Option<String>, CommandError> {
     let all_contents = concatenate_contents(_request);
+    debug!("All contents: {:?}", all_contents);
     process_commands(all_contents)
 }
 
@@ -100,8 +112,10 @@ fn handle_connection(mut stream: TcpStream) -> (TcpStream, Result<Option<String>
     (stream, output)
 }
 
+
 fn main() {
-    println!("Reda's redis server started...");
+    configure_logger();
+    info!("Reda's server is now started...");
     let listener = Arc::new(Mutex::new(TcpListener::bind("127.0.0.1:6379").unwrap()));
 
     for stream in listener.lock().unwrap().incoming() {
@@ -112,7 +126,7 @@ fn main() {
                     send_response(stream, output);
                 },
                 Err(e) => {
-                    println!("error: {}", e);
+                    error!("error: {}", e);
                 }
             }
         });
