@@ -3,6 +3,8 @@ mod utils;
 
 use std::io::{BufReader, Read};
 use std::net::{TcpListener, TcpStream};
+use std::sync::{Arc, Mutex};
+use std::thread;
 use utils::{read, read_next_line};
 use structs::{RESPObject, RESPElement, RESPHeader};
 use structs::{RESP_ARRAY_SYMBOL,
@@ -113,17 +115,19 @@ fn handle_connection(mut stream: TcpStream) -> (TcpStream, Option<String>) {
 
 fn main() {
     println!("Reda's redis server started...");
-    let listener = TcpListener::bind("127.0.0.1:6379").unwrap();
+    let listener = Arc::new(Mutex::new(TcpListener::bind("127.0.0.1:6379").unwrap()));
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(mut _stream) => loop {
-                let (mut stream, output) = handle_connection(_stream.try_clone().unwrap());
-                send_response(stream, output);
+    for stream in listener.lock().unwrap().incoming() {
+        thread::spawn(move|| {
+            match stream {
+                Ok(_stream) => loop {
+                    let (stream, output) = handle_connection(_stream.try_clone().unwrap());
+                    send_response(stream, output);
+                },
+                Err(e) => {
+                    println!("error: {}", e);
+                }
             }
-            Err(e) => {
-                println!("error: {}", e);
-            }
-        }
+        });
     }
 }

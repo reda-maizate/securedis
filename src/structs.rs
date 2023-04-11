@@ -93,7 +93,7 @@ impl From<char> for RESPHeaderType {
 
 impl From<Vec<char>> for RESPHeader {
     fn from(s: Vec<char>) -> RESPHeader {
-        println!("s: {:?}", s);
+        // println!("s: {:?}", s);
         let resp_type = s[0].into();
         let num_of_elements: i32 = s[1].to_digit(10).unwrap() as i32;
 
