@@ -20,4 +20,4 @@ Cargo.lock
 .env
 
 # Data storage
-/src/data.csv
+src/data.csv
