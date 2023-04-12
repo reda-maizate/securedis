@@ -1,12 +1,13 @@
 mod structs;
 mod utils;
+mod storage;
 
 extern crate env_logger;
 extern crate log;
 
 use env_logger::Builder;
 use log::{debug, error, info};
-use std::io::{BufReader, Read};
+use std::io::{BufReader};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -124,8 +125,8 @@ fn main() {
                     let (stream, output) = handle_connection(_stream.try_clone().unwrap());
                     send_response(stream, output);
                 },
-                Err(e) => {
-                    error!("error: {}", e);
+                Err(_e) => {
+                    error!("error: {}", _e);
                 }
             }
         });
