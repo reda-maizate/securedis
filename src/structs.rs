@@ -12,7 +12,6 @@ pub const SET_COMMAND: &str = "SET";
 pub const GET_COMMAND: &str = "GET";
 pub const PING_COMMAND: &str = "PING";
 
-
 #[derive(Debug, Copy, Clone)]
 pub struct RESPHeader {
     pub resp_type: Option<RESPHeaderType>,
@@ -54,7 +53,6 @@ impl Display for CommandError {
     }
 }
 
-
 impl RESPObject {
     pub fn new() -> RESPObject {
         RESPObject {
@@ -67,7 +65,10 @@ impl From<Vec<char>> for RESPElement {
     fn from(str: Vec<char>) -> RESPElement {
         let content: String = str.into_iter().collect();
         RESPElement {
-            header: RESPHeader { resp_type: None, num_of_elements: None },
+            header: RESPHeader {
+                resp_type: None,
+                num_of_elements: None,
+            },
             content: Some(content),
         }
     }
@@ -84,7 +85,6 @@ impl From<RESPHeader> for RESPElement {
         }
     }
 }
-
 
 impl From<char> for RESPHeaderType {
     fn from(c: char) -> RESPHeaderType {
@@ -114,7 +114,7 @@ impl From<Vec<char>> for RESPHeader {
             _ => RESPHeader {
                 resp_type: Some(resp_type),
                 num_of_elements: Some(num_of_elements),
-            }
+            },
         }
     }
 }

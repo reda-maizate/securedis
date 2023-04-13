@@ -10,23 +10,20 @@ use crate::structs::{CommandError, RESPElement, RESPObject};
 use crate::structs::{ECHO_COMMAND, GET_COMMAND, PING_COMMAND, SET_COMMAND};
 
 lazy_static! {
-    static ref STORAGE_PATH: String = env::var("STORAGE_PATH").unwrap();
+    static ref STORAGE_PATH: String =
+        env::var("STORAGE_PATH").unwrap_or_else(|_| "./src/data.csv".to_string());
 }
 
-pub fn read_next_line(reader: &mut BufReader<TcpStream>, mut input: &mut String) -> String {
+pub fn read_next_line(reader: &mut BufReader<TcpStream>, input: &mut String) -> String {
     input.clear();
-    reader
-        .read_line(&mut input)
-        .unwrap_or(0);
+    reader.read_line(input).unwrap_or(0);
 
     // debug!("Next line: {:?}", nxt);
     input.to_string()
 }
 
-pub fn read(input: &mut String) -> Vec<char> {
-    let mut raw_chars: Vec<char> = input
-        .chars()
-        .collect();
+pub fn read(input: &mut str) -> Vec<char> {
+    let mut raw_chars: Vec<char> = input.chars().collect();
 
     // Remove the two last elements of the vector: \n and \r
     raw_chars.pop();
@@ -44,18 +41,30 @@ pub fn get_last_element(resp_object: &mut RESPObject) -> Option<&mut RESPElement
 pub fn concatenate_contents(resp_object: RESPObject) -> String {
     let mut contents: String = String::new();
 
+    for element in resp_object.elements.into_iter().flatten() {
+        if let Some(_content) = element.content {
+            // Add a space between each element
+            contents.push_str(&_content);
+            contents.push(' ');
+        }
+    }
+
+    /*
+    todo: check if the new implementation works
+
     for element in resp_object.elements {
         if let Some(_element) = element {
             match _element.content {
                 Some(_content) => {
                     // Add a space between each element
                     contents.push_str(&_content);
-                    contents.push_str(" ");
+                    contents.push(' ');
                 }
                 None => {}
             }
         }
     }
+     */
     contents.trim().to_string()
 }
 
@@ -74,7 +83,9 @@ pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandE
                     let len_char_msg = message.len().to_string();
                     Ok(Some(format!("${}\r\n{}\r\n", len_char_msg, message)))
                 }
-                Err(e) => Err(CommandError::InvalidNumberOfArguments { message: "Invalid number of arguments".to_string() })
+                Err(_e) => Err(CommandError::InvalidNumberOfArguments {
+                    message: "Invalid number of arguments".to_string(),
+                }),
             }
         }
         SET_COMMAND => {
@@ -89,11 +100,18 @@ pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandE
                         Ok(_) => Ok(Some("+OK\r\n".to_string())),
                         Err(e) => {
                             error!("Error SET: {:?}", e);
-                            Err(CommandError::InvalidCommand { message: format!("Error during insertion of the key-value {}: {}", key, value) })
+                            Err(CommandError::InvalidCommand {
+                                message: format!(
+                                    "Error during insertion of the key-value {}: {}",
+                                    key, value
+                                ),
+                            })
                         }
                     }
                 }
-                Err(_e) => Err(CommandError::InvalidNumberOfArguments { message: "Invalid number of arguments".to_string() })
+                Err(_e) => Err(CommandError::InvalidNumberOfArguments {
+                    message: "Invalid number of arguments".to_string(),
+                }),
             }
         }
         GET_COMMAND => {
@@ -101,7 +119,7 @@ pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandE
             match contains_arguments {
                 Ok(_) => {
                     let key = commands.remove(0);
-                    let mut storage = Storage::new();
+                    let storage = Storage::new();
 
                     match storage.get(key) {
                         Ok(value) => {
@@ -111,24 +129,20 @@ pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandE
                         Err(_e) => {
                             error!("Error GET: {:?}", _e);
                             Err(CommandError::InvalidCommand {
-                                    message: format!("Key {} not found", key)
-                                }
-                            )
+                                message: format!("Key {} not found", key),
+                            })
                         }
                     }
                 }
                 Err(_e) => Err(CommandError::InvalidNumberOfArguments {
-                        message: "Invalid number of arguments".to_string()
-                    }
-                )
+                    message: "Invalid number of arguments".to_string(),
+                }),
             }
         }
-        PING_COMMAND => {
-            Ok(Some("+PONG\r\n".to_string()))
-        }
-        _ => {
-            Err(CommandError::InvalidCommand { message: "Invalid command".to_string() })
-        }
+        PING_COMMAND => Ok(Some("+PONG\r\n".to_string())),
+        _ => Err(CommandError::InvalidCommand {
+            message: "Invalid command".to_string(),
+        }),
     }
 }
 
@@ -139,24 +153,22 @@ pub fn send_response(mut stream: TcpStream, raw_response: Result<Option<String>,
 
 pub fn serialize_response(response: Result<Option<String>, CommandError>) -> String {
     match response {
-        Ok(Some(_response)) => {
-            _response
-        }
-        Ok(None) => {
-            "".to_string()
-        }
+        Ok(Some(_response)) => _response,
+        Ok(None) => "".to_string(),
         Err(err) => {
             format!("-ERR {}\r\n", err)
         }
     }
 }
 
-pub fn check_expected_num_args(commands: Vec<&str>, expected_num_of_args: usize) -> Result<(), CommandError> {
+pub fn check_expected_num_args(
+    commands: Vec<&str>,
+    expected_num_of_args: usize,
+) -> Result<(), CommandError> {
     if commands.len() < expected_num_of_args {
         Err(CommandError::InvalidNumberOfArguments {
-                message: "Invalid number of arguments".to_string()
-            }
-        )
+            message: "Invalid number of arguments".to_string(),
+        })
     } else {
         Ok(())
     }

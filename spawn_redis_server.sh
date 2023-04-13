@@ -5,6 +5,7 @@
 # CodeCrafters uses this file to test your code. Don't make any changes here!
 #
 # DON'T EDIT THIS!
+export RUST_LOG="info"
 exec cargo run \
     --quiet \
     --release \
