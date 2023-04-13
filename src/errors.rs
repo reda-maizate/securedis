@@ -1,7 +1,7 @@
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum CommandError {
     InvalidCommand { message: String },
     InvalidNumberOfArguments { message: String },
@@ -16,6 +16,7 @@ impl Display for CommandError {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum FileError {
     NotFound { file_name: String },
 }

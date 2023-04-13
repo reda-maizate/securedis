@@ -2,6 +2,7 @@ mod errors;
 mod process;
 mod storage;
 mod structs;
+mod tests;
 mod utils;
 
 extern crate env_logger;
