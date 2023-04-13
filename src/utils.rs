@@ -2,10 +2,10 @@ use std::env;
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
 
+use crate::process::{process_echo, process_get, process_set};
 use lazy_static::lazy_static;
-use log::{debug, error};
+use log::debug;
 
-use crate::storage::Storage;
 use crate::structs::{CommandError, RESPElement, RESPObject};
 use crate::structs::{ECHO_COMMAND, GET_COMMAND, PING_COMMAND, SET_COMMAND};
 
@@ -58,70 +58,9 @@ pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandE
     let command: &str = maybe_lowercase_command.as_str();
 
     match command {
-        ECHO_COMMAND => {
-            let contains_argument = check_expected_num_args(commands.clone(), 1);
-            match contains_argument {
-                Ok(_) => {
-                    let message = commands.remove(0);
-                    let len_char_msg = message.len().to_string();
-                    Ok(Some(format!("${}\r\n{}\r\n", len_char_msg, message)))
-                }
-                Err(_e) => Err(CommandError::InvalidNumberOfArguments {
-                    message: "Invalid number of arguments".to_string(),
-                }),
-            }
-        }
-        SET_COMMAND => {
-            let contains_arguments = check_expected_num_args(commands.clone(), 2);
-            match contains_arguments {
-                Ok(_) => {
-                    let key = commands.remove(0);
-                    let value = commands.remove(0);
-                    let mut storage = Storage::new();
-
-                    match storage.set(key, value) {
-                        Ok(_) => Ok(Some("+OK\r\n".to_string())),
-                        Err(e) => {
-                            error!("Error SET: {:?}", e);
-                            Err(CommandError::InvalidCommand {
-                                message: format!(
-                                    "Error during insertion of the key-value {}: {}",
-                                    key, value
-                                ),
-                            })
-                        }
-                    }
-                }
-                Err(_e) => Err(CommandError::InvalidNumberOfArguments {
-                    message: "Invalid number of arguments".to_string(),
-                }),
-            }
-        }
-        GET_COMMAND => {
-            let contains_arguments = check_expected_num_args(commands.clone(), 1);
-            match contains_arguments {
-                Ok(_) => {
-                    let key = commands.remove(0);
-                    let storage = Storage::new();
-
-                    match storage.get(key) {
-                        Ok(value) => {
-                            let len_char_msg = value.len().to_string();
-                            Ok(Some(format!("${}\r\n{}\r\n", len_char_msg, value)))
-                        }
-                        Err(_e) => {
-                            error!("Error GET: {:?}", _e);
-                            Err(CommandError::InvalidCommand {
-                                message: format!("Key {} not found", key),
-                            })
-                        }
-                    }
-                }
-                Err(_e) => Err(CommandError::InvalidNumberOfArguments {
-                    message: "Invalid number of arguments".to_string(),
-                }),
-            }
-        }
+        ECHO_COMMAND => process_echo(commands),
+        SET_COMMAND => process_set(commands),
+        GET_COMMAND => process_get(commands),
         PING_COMMAND => Ok(Some("+PONG\r\n".to_string())),
         _ => Err(CommandError::InvalidCommand {
             message: "Invalid command".to_string(),
