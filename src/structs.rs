@@ -9,6 +9,7 @@ pub const SET_COMMAND: &str = "SET";
 pub const GET_COMMAND: &str = "GET";
 pub const PING_COMMAND: &str = "PING";
 // pub const SAVE_COMMAND: &str = "SAVE";
+// pub const LOAD_COMMAND: &str = "LOAD";
 
 #[derive(Debug, Copy, Clone)]
 pub struct RESPHeader {
@@ -88,8 +89,6 @@ impl From<Vec<char>> for RESPHeader {
         let num_of_elements: i32 = s[1].to_digit(10).unwrap() as i32;
 
         match resp_type {
-            // For Array, the next line is a header and the following lines are elements
-            // TODO: Check for the others types
             RESPHeaderType::Array => RESPHeader {
                 resp_type: Some(RESPHeaderType::Array),
                 num_of_elements: Some((num_of_elements * 2) as i32),

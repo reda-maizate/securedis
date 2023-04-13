@@ -8,6 +8,7 @@ use crate::process::{
     process_echo,
     process_get,
     // process_save,
+    // process_load,
     process_set,
 };
 use crate::storage::main::Storage;
@@ -25,7 +26,6 @@ lazy_static! {
 pub fn read_next_line(reader: &mut BufReader<TcpStream>, input: &mut String) -> String {
     input.clear();
     reader.read_line(input).unwrap_or(0);
-
     // debug!("Next line: {:?}", nxt);
     input.to_string()
 }
@@ -73,6 +73,7 @@ pub fn process_commands(
         SET_COMMAND => process_set(args, storage),
         GET_COMMAND => process_get(args, storage),
         // SAVE_COMMAND => process_save(commands, storage),
+        // LOAD_COMMAND => process_load(commands, storage),
         PING_COMMAND => Ok(Some("+PONG\r\n".to_string())),
         _ => Err(CommandError::InvalidCommand {
             message: "Invalid command".to_string(),

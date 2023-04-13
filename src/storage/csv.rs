@@ -19,6 +19,12 @@ pub fn save(storage: Storage, path: &str) {
 }
 
 #[allow(dead_code)]
+pub fn load(storage: Storage) -> Result<Storage, FileError> {
+    retrieve_objects_from_csv_file(storage.clone())?;
+    Ok(storage)
+}
+
+#[allow(dead_code)]
 fn check_file_exists() -> bool {
     match std::path::Path::new(STORAGE_PATH.as_str()).exists() {
         true => true,

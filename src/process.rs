@@ -96,3 +96,25 @@ pub fn process_get(
 //         }),
 //     }
 // }
+
+// pub fn process_load(mut commands: Vec<&str>, storage: Storage) -> Result<Option<String>, CommandError> {
+//     let contains_arguments = check_expected_num_args(commands.clone(), 1);
+//     match contains_arguments {
+//         Ok(_) => {
+//             let path = commands.remove(0);
+//
+//             match storage.save(path) {
+//                 Some(_) => Ok(Some("+OK\r\n".to_string())),
+//                 Err(_e) => {
+//                     error!("Error SAVE: {:?}", _e);
+//                     Err(CommandError::InvalidCommand {
+//                         message: format!("Error during saving the database in {}", path),
+//                     })
+//                 }
+//             }
+//         }
+//         Err(_e) => Err(CommandError::InvalidNumberOfArguments {
+//             message: "Invalid number of arguments".to_string(),
+//         }),
+//     }
+// }

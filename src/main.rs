@@ -124,7 +124,6 @@ fn main() {
     configure_logger();
     info!("Reda's server is now started...");
     let listener = Arc::new(Mutex::new(TcpListener::bind("127.0.0.1:6379").unwrap()));
-    // TODO: Make this a thread safe storage
     let storage = Arc::new(Mutex::new(Storage::new()));
 
     for stream in listener.lock().unwrap().incoming() {
