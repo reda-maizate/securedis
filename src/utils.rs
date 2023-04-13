@@ -1,6 +1,7 @@
 use std::env;
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
+use std::sync::MutexGuard;
 
 use crate::errors::CommandError;
 use crate::process::{
@@ -58,17 +59,19 @@ pub fn concatenate_contents(resp_object: RESPObject) -> String {
     contents.trim().to_string()
 }
 
-pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandError> {
-    let mut commands: Vec<&str> = all_contents.split(' ').collect();
-    debug!("Commands: {:?}", commands);
-    let maybe_lowercase_command = commands.remove(0).to_uppercase();
-    let command: &str = maybe_lowercase_command.as_str();
-    let storage = Storage::new();
+pub fn process_commands(
+    all_contents: String,
+    storage: MutexGuard<Storage>,
+) -> Result<Option<String>, CommandError> {
+    let mut args: Vec<&str> = all_contents.split(' ').collect();
+    debug!("Arguments: {:?}", args);
+    let uppercase_command = args.remove(0).to_uppercase();
+    let command: &str = uppercase_command.as_str();
 
     match command {
-        ECHO_COMMAND => process_echo(commands),
-        SET_COMMAND => process_set(commands, storage),
-        GET_COMMAND => process_get(commands, storage),
+        ECHO_COMMAND => process_echo(args),
+        SET_COMMAND => process_set(args, storage),
+        GET_COMMAND => process_get(args, storage),
         // SAVE_COMMAND => process_save(commands, storage),
         PING_COMMAND => Ok(Some("+PONG\r\n".to_string())),
         _ => Err(CommandError::InvalidCommand {

@@ -8,13 +8,14 @@ extern crate env_logger;
 extern crate log;
 
 use crate::errors::CommandError;
+use crate::storage::main::Storage;
 use crate::structs::RESPHeaderType;
 use crate::utils::{concatenate_contents, get_last_element, process_commands, send_response};
 use env_logger::Builder;
 use log::{debug, error, info};
 use std::io::BufReader;
 use std::net::{TcpListener, TcpStream};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread;
 use structs::{RESPElement, RESPHeader, RESPObject};
 use structs::{
@@ -80,13 +81,19 @@ fn read_header_or_element(input: &mut str, resp_object: &mut RESPObject) {
     }
 }
 
-fn process_request(mut _request: RESPObject) -> Result<Option<String>, CommandError> {
+fn process_request(
+    mut _request: RESPObject,
+    storage: MutexGuard<Storage>,
+) -> Result<Option<String>, CommandError> {
     let all_contents = concatenate_contents(_request);
     debug!("All contents: {:?}", all_contents);
-    process_commands(all_contents)
+    process_commands(all_contents, storage)
 }
 
-fn handle_connection(stream: TcpStream) -> (TcpStream, Result<Option<String>, CommandError>) {
+fn handle_connection(
+    stream: TcpStream,
+    storage: MutexGuard<Storage>,
+) -> (TcpStream, Result<Option<String>, CommandError>) {
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut input = String::new();
 
@@ -108,7 +115,8 @@ fn handle_connection(stream: TcpStream) -> (TcpStream, Result<Option<String>, Co
         read_header_or_element(&mut new_parsed_line, &mut resp_object);
     }
 
-    let output: Result<Option<String>, CommandError> = process_request(resp_object.clone());
+    let output: Result<Option<String>, CommandError> =
+        process_request(resp_object.clone(), storage);
     (stream, output)
 }
 
@@ -116,11 +124,15 @@ fn main() {
     configure_logger();
     info!("Reda's server is now started...");
     let listener = Arc::new(Mutex::new(TcpListener::bind("127.0.0.1:6379").unwrap()));
+    // TODO: Make this a thread safe storage
+    let storage = Arc::new(Mutex::new(Storage::new()));
 
     for stream in listener.lock().unwrap().incoming() {
+        let shared_storage = storage.clone();
         thread::spawn(move || match stream {
             Ok(_stream) => loop {
-                let (stream, output) = handle_connection(_stream.try_clone().unwrap());
+                let (stream, output) =
+                    handle_connection(_stream.try_clone().unwrap(), shared_storage.lock().unwrap());
                 send_response(stream, output);
             },
             Err(_e) => {

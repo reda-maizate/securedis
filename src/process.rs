@@ -2,6 +2,7 @@ use crate::errors::CommandError;
 use crate::storage::main::Storage;
 use crate::utils::check_expected_num_args;
 use log::error;
+use std::sync::MutexGuard;
 
 pub fn process_echo(mut commands: Vec<&str>) -> Result<Option<String>, CommandError> {
     let contains_argument = check_expected_num_args(commands.clone(), 1);
@@ -19,7 +20,7 @@ pub fn process_echo(mut commands: Vec<&str>) -> Result<Option<String>, CommandEr
 
 pub fn process_set(
     mut commands: Vec<&str>,
-    mut storage: Storage,
+    mut storage: MutexGuard<Storage>,
 ) -> Result<Option<String>, CommandError> {
     let contains_arguments = check_expected_num_args(commands.clone(), 2);
     match contains_arguments {
@@ -48,7 +49,7 @@ pub fn process_set(
 
 pub fn process_get(
     mut commands: Vec<&str>,
-    storage: Storage,
+    storage: MutexGuard<Storage>,
 ) -> Result<Option<String>, CommandError> {
     let contains_arguments = check_expected_num_args(commands.clone(), 1);
     match contains_arguments {

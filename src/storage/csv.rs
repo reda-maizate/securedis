@@ -1,18 +1,19 @@
 use crate::errors::FileError;
 use crate::storage::main::Storage;
+use dashmap::DashMap;
 use lazy_static::lazy_static;
-use std::collections::HashMap;
+use log::debug;
 use std::env;
 use std::fs::OpenOptions;
 
 lazy_static! {
-    static ref STORAGE_PATH: String =
+    pub static ref STORAGE_PATH: String =
         env::var("STORAGE_PATH").unwrap_or_else(|_| "./src/data.csv".to_string());
 }
 
 #[allow(dead_code)]
 pub fn save(storage: Storage, path: &str) {
-    for (key, value) in storage.objects.iter() {
+    for (key, value) in storage.objects.into_iter() {
         insert_object_into_csv_file(key, value, Some(path));
     }
 }
@@ -27,8 +28,8 @@ fn check_file_exists() -> bool {
 
 #[allow(dead_code)]
 fn retrieve_objects_from_csv_file(mut storage: Storage) -> Result<(), FileError> {
-    // TODO: Check if you need to fix this
-    let mut objects: HashMap<String, String> = HashMap::new();
+    // TODO: Fix this
+    let objects = DashMap::new();
     let is_file_exists = check_file_exists();
     match is_file_exists {
         true => {
@@ -37,7 +38,8 @@ fn retrieve_objects_from_csv_file(mut storage: Storage) -> Result<(), FileError>
                 let record = result.unwrap();
                 let key = record.get(0).unwrap();
                 let value = record.get(1).unwrap();
-                objects.insert(key.to_string(), value.to_string());
+                // objects.insert(key.to_string(), value.to_string());
+                *objects.entry(key.to_string()).or_insert(value.to_string()) = value.to_string();
             }
             storage.objects = objects;
             Ok(())
@@ -48,7 +50,7 @@ fn retrieve_objects_from_csv_file(mut storage: Storage) -> Result<(), FileError>
     }
 }
 
-fn insert_object_into_csv_file(key: &str, value: &str, path: Option<&str>) {
+fn insert_object_into_csv_file(key: String, value: String, path: Option<&str>) {
     let file = OpenOptions::new()
         .write(true)
         .append(true)
@@ -78,14 +80,13 @@ fn update_object_into_csv_file(key: &str, value: &str) {
         let key_csv = record.get(0).unwrap();
         let value_csv = record.get(1).unwrap();
         if key_csv == key {
-            // writer.write_record([key, value]).unwrap();
-            println!(
+            debug!(
                 "paire a modifier (nouvelle paire): {}-{} / ancienne paire: {}-{}",
                 key, value, key_csv, value_csv
             );
             writer.write_record([key, value]).unwrap();
         } else {
-            println!("paire deja existante : {}-{}", key_csv, value_csv);
+            debug!("paire deja existante : {}-{}", key_csv, value_csv);
             writer.write_record([key_csv, value_csv]).unwrap();
         }
     }

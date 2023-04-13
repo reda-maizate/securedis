@@ -28,3 +28,4 @@ env_logger = "0.10.0"                               # logging
 log = "0.4.17"                                      # logging
 csv = "1.2.1"                                       # csv parsing
 lazy_static = "1.4.0"                               # static variables
+dashmap = "5.4.0"                                   # concurrent hashmap
