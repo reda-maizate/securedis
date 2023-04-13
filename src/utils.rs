@@ -15,7 +15,7 @@ use crate::process::{
     process_set,
 };
 use crate::storage::main::Storage;
-use crate::structs::{RESPElement, RESPObject, PONG_RESPONSE};
+use crate::structs::{RESPObject, PONG_RESPONSE};
 use crate::structs::{ECHO_COMMAND, GET_COMMAND, PING_COMMAND, SET_COMMAND};
 
 lazy_static! {
@@ -28,21 +28,6 @@ pub fn read_next_line(reader: &mut BufReader<TcpStream>, input: &mut String) -> 
     reader.read_line(input).unwrap_or(0);
     // debug!("Next line: {:?}", nxt);
     input.to_string()
-}
-
-pub fn read(input: &mut str) -> Vec<char> {
-    let mut raw_chars: Vec<char> = input.chars().collect();
-    // Remove the two last elements of the vector: \n and \r
-    raw_chars.pop();
-    raw_chars.pop();
-    raw_chars
-}
-
-pub fn get_last_element(resp_object: &mut RESPObject) -> Option<&mut RESPElement> {
-    match resp_object.elements.len() {
-        0 => None,
-        n => resp_object.elements[n - 1].as_mut(),
-    }
 }
 
 pub fn concatenate_contents(resp_object: RESPObject) -> String {

@@ -5,7 +5,21 @@ use crate::structs::{
     RESP_ARRAY_SYMBOL, RESP_BULK_STRING_SYMBOL, RESP_ERROR_SYMBOL, RESP_INTEGER_SYMBOL,
     RESP_SIMPLE_STRING_SYMBOL,
 };
-use crate::utils::{get_last_element, read};
+
+pub fn read(input: &mut str) -> Vec<char> {
+    let mut raw_chars: Vec<char> = input.chars().collect();
+    // Remove the two last elements of the vector: \r and \n
+    raw_chars.pop();
+    raw_chars.pop();
+    raw_chars
+}
+
+pub fn get_last_element(resp_object: &mut RESPObject) -> Option<&mut RESPElement> {
+    match resp_object.elements.len() {
+        0 => None,
+        n => resp_object.elements[n - 1].as_mut(),
+    }
+}
 
 pub fn read_header(input: &mut str) -> RESPElement {
     let cleaned_chars = read(input);
