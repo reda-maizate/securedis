@@ -23,3 +23,9 @@ anyhow = "1.0.59"                                   # error handling
 bytes = "1.3.0"                                     # helps manage buffers
 thiserror = "1.0.32"                                # error handling
 tokio = { version = "1.23.0", features = ["full"] } # async networking
+chrono = "0.4.24"                                   # time
+env_logger = "0.10.0"                               # logging
+log = "0.4.17"                                      # logging
+csv = "1.2.1"                                       # csv parsing
+lazy_static = "1.4.0"                               # static variables
+dashmap = "5.4.0"                                   # concurrent hashmap

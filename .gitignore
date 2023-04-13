@@ -15,3 +15,9 @@ Cargo.lock
 
 # JetBrains IDEA
 .idea
+
+# Environment variables
+.env
+
+# Data storage
+src/data.csv
