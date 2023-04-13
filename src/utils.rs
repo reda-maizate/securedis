@@ -43,28 +43,11 @@ pub fn concatenate_contents(resp_object: RESPObject) -> String {
 
     for element in resp_object.elements.into_iter().flatten() {
         if let Some(_content) = element.content {
-            // Add a space between each element
             contents.push_str(&_content);
             contents.push(' ');
         }
     }
 
-    /*
-    todo: check if the new implementation works
-
-    for element in resp_object.elements {
-        if let Some(_element) = element {
-            match _element.content {
-                Some(_content) => {
-                    // Add a space between each element
-                    contents.push_str(&_content);
-                    contents.push(' ');
-                }
-                None => {}
-            }
-        }
-    }
-     */
     contents.trim().to_string()
 }
 
