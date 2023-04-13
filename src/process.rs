@@ -4,6 +4,7 @@ use log::error;
 
 use crate::errors::CommandError;
 use crate::storage::main::Storage;
+use crate::structs::{EXPIRE_COMMAND, NIL_RESPONSE, OK_RESPONSE};
 use crate::utils::check_expected_num_args;
 
 pub fn process_echo(mut commands: Vec<&str>) -> Result<Option<String>, CommandError> {
@@ -29,17 +30,18 @@ pub fn process_set(
         Ok(_) => {
             let key = commands.remove(0);
             let value = commands.remove(0);
+            let mut expiration: Option<u64> = None;
 
-            // if commands.contains(&"PX") {
-            //
-            // }
+            if commands.contains(&EXPIRE_COMMAND) {
+                expiration = process_expiration(commands);
+            }
 
-            match storage.set(key, value, None) {
-                Ok(_) => Ok(Some("+OK\r\n".to_string())),
+            match storage.set(key, value, expiration) {
+                Ok(_) => Ok(Some(OK_RESPONSE.to_string())),
                 Err(e) => {
                     error!("Error SET: {:?}", e);
                     Err(CommandError::InvalidCommand {
-                        message: "$-1".to_string(),
+                        message: NIL_RESPONSE.to_string(),
                     })
                 }
             }
@@ -67,7 +69,7 @@ pub fn process_get(
                 Err(_e) => {
                     error!("Error GET: {:?}", _e);
                     Err(CommandError::InvalidCommand {
-                        message: "$-1\r\n".to_string(),
+                        message: NIL_RESPONSE.to_string(),
                     })
                 }
             }
@@ -75,6 +77,18 @@ pub fn process_get(
         Err(_e) => Err(CommandError::InvalidNumberOfArguments {
             message: "-ERR Invalid number of arguments".to_string(),
         }),
+    }
+}
+
+pub fn process_expiration(mut commands: Vec<&str>) -> Option<u64> {
+    let _px_command = commands.remove(0);
+    let contains_argument = check_expected_num_args(commands.clone(), 1);
+    match contains_argument {
+        Ok(_) => {
+            let px_value = commands.remove(0);
+            Some(px_value.parse::<u64>().unwrap())
+        }
+        Err(_e) => None,
     }
 }
 

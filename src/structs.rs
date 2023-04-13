@@ -10,6 +10,11 @@ pub const GET_COMMAND: &str = "GET";
 pub const PING_COMMAND: &str = "PING";
 // pub const SAVE_COMMAND: &str = "SAVE";
 // pub const LOAD_COMMAND: &str = "LOAD";
+pub const EXPIRE_COMMAND: &str = "PX";
+
+pub const OK_RESPONSE: &str = "+OK\r\n";
+pub const PONG_RESPONSE: &str = "+PONG\r\n";
+pub const NIL_RESPONSE: &str = "$-1\r\n";
 
 #[derive(Debug, Copy, Clone)]
 pub struct RESPHeader {

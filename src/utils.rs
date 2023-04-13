@@ -15,7 +15,7 @@ use crate::process::{
     process_set,
 };
 use crate::storage::main::Storage;
-use crate::structs::{RESPElement, RESPObject};
+use crate::structs::{RESPElement, RESPObject, PONG_RESPONSE};
 use crate::structs::{ECHO_COMMAND, GET_COMMAND, PING_COMMAND, SET_COMMAND};
 
 lazy_static! {
@@ -32,7 +32,6 @@ pub fn read_next_line(reader: &mut BufReader<TcpStream>, input: &mut String) -> 
 
 pub fn read(input: &mut str) -> Vec<char> {
     let mut raw_chars: Vec<char> = input.chars().collect();
-
     // Remove the two last elements of the vector: \n and \r
     raw_chars.pop();
     raw_chars.pop();
@@ -74,7 +73,7 @@ pub fn process_commands(
         GET_COMMAND => process_get(args, storage),
         // SAVE_COMMAND => process_save(commands, storage),
         // LOAD_COMMAND => process_load(commands, storage),
-        PING_COMMAND => Ok(Some("+PONG\r\n".to_string())),
+        PING_COMMAND => Ok(Some(PONG_RESPONSE.to_string())),
         _ => Err(CommandError::InvalidCommand {
             message: "-ERR Invalid command".to_string(),
         }),
