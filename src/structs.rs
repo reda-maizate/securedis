@@ -1,6 +1,3 @@
-use std::fmt;
-use std::fmt::{Display, Formatter};
-
 pub const RESP_ARRAY_SYMBOL: char = '*';
 pub const RESP_BULK_STRING_SYMBOL: char = '$';
 pub const RESP_INTEGER_SYMBOL: char = ':';
@@ -11,6 +8,7 @@ pub const ECHO_COMMAND: &str = "ECHO";
 pub const SET_COMMAND: &str = "SET";
 pub const GET_COMMAND: &str = "GET";
 pub const PING_COMMAND: &str = "PING";
+// pub const SAVE_COMMAND: &str = "SAVE";
 
 #[derive(Debug, Copy, Clone)]
 pub struct RESPHeader {
@@ -36,21 +34,6 @@ pub enum RESPHeaderType {
     Integer,
     Error,
     SimpleString,
-}
-
-#[derive(Debug)]
-pub enum CommandError {
-    InvalidCommand { message: String },
-    InvalidNumberOfArguments { message: String },
-}
-
-impl Display for CommandError {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self {
-            CommandError::InvalidCommand { message } => write!(f, "{}", message),
-            CommandError::InvalidNumberOfArguments { message } => write!(f, "{}", message),
-        }
-    }
 }
 
 impl RESPObject {

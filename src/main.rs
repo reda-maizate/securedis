@@ -1,3 +1,4 @@
+mod errors;
 mod process;
 mod storage;
 mod structs;
@@ -6,7 +7,8 @@ mod utils;
 extern crate env_logger;
 extern crate log;
 
-use crate::structs::{CommandError, RESPHeaderType};
+use crate::errors::CommandError;
+use crate::structs::RESPHeaderType;
 use crate::utils::{concatenate_contents, get_last_element, process_commands, send_response};
 use env_logger::Builder;
 use log::{debug, error, info};

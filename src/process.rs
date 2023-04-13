@@ -1,5 +1,5 @@
-use crate::storage::Storage;
-use crate::structs::CommandError;
+use crate::errors::CommandError;
+use crate::storage::main::Storage;
 use crate::utils::check_expected_num_args;
 use log::error;
 
@@ -17,13 +17,15 @@ pub fn process_echo(mut commands: Vec<&str>) -> Result<Option<String>, CommandEr
     }
 }
 
-pub fn process_set(mut commands: Vec<&str>) -> Result<Option<String>, CommandError> {
+pub fn process_set(
+    mut commands: Vec<&str>,
+    mut storage: Storage,
+) -> Result<Option<String>, CommandError> {
     let contains_arguments = check_expected_num_args(commands.clone(), 2);
     match contains_arguments {
         Ok(_) => {
             let key = commands.remove(0);
             let value = commands.remove(0);
-            let mut storage = Storage::new();
 
             match storage.set(key, value) {
                 Ok(_) => Ok(Some("+OK\r\n".to_string())),
@@ -44,12 +46,14 @@ pub fn process_set(mut commands: Vec<&str>) -> Result<Option<String>, CommandErr
     }
 }
 
-pub fn process_get(mut commands: Vec<&str>) -> Result<Option<String>, CommandError> {
+pub fn process_get(
+    mut commands: Vec<&str>,
+    storage: Storage,
+) -> Result<Option<String>, CommandError> {
     let contains_arguments = check_expected_num_args(commands.clone(), 1);
     match contains_arguments {
         Ok(_) => {
             let key = commands.remove(0);
-            let storage = Storage::new();
 
             match storage.get(key) {
                 Ok(value) => {
@@ -69,3 +73,25 @@ pub fn process_get(mut commands: Vec<&str>) -> Result<Option<String>, CommandErr
         }),
     }
 }
+
+// pub fn process_save(mut commands: Vec<&str>, storage: Storage) -> Result<Option<String>, CommandError> {
+//     let contains_arguments = check_expected_num_args(commands.clone(), 1);
+//     match contains_arguments {
+//         Ok(_) => {
+//             let path = commands.remove(0);
+//
+//             match storage.save(path) {
+//                 Some(_) => Ok(Some("+OK\r\n".to_string())),
+//                 Err(_e) => {
+//                     error!("Error SAVE: {:?}", _e);
+//                     Err(CommandError::InvalidCommand {
+//                         message: format!("Error during saving the database in {}", path),
+//                     })
+//                 }
+//             }
+//         }
+//         Err(_e) => Err(CommandError::InvalidNumberOfArguments {
+//             message: "Invalid number of arguments".to_string(),
+//         }),
+//     }
+// }

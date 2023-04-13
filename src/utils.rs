@@ -2,11 +2,18 @@ use std::env;
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
 
-use crate::process::{process_echo, process_get, process_set};
+use crate::errors::CommandError;
+use crate::process::{
+    process_echo,
+    process_get,
+    // process_save,
+    process_set,
+};
+use crate::storage::main::Storage;
 use lazy_static::lazy_static;
 use log::debug;
 
-use crate::structs::{CommandError, RESPElement, RESPObject};
+use crate::structs::{RESPElement, RESPObject};
 use crate::structs::{ECHO_COMMAND, GET_COMMAND, PING_COMMAND, SET_COMMAND};
 
 lazy_static! {
@@ -56,11 +63,13 @@ pub fn process_commands(all_contents: String) -> Result<Option<String>, CommandE
     debug!("Commands: {:?}", commands);
     let maybe_lowercase_command = commands.remove(0).to_uppercase();
     let command: &str = maybe_lowercase_command.as_str();
+    let storage = Storage::new();
 
     match command {
         ECHO_COMMAND => process_echo(commands),
-        SET_COMMAND => process_set(commands),
-        GET_COMMAND => process_get(commands),
+        SET_COMMAND => process_set(commands, storage),
+        GET_COMMAND => process_get(commands, storage),
+        // SAVE_COMMAND => process_save(commands, storage),
         PING_COMMAND => Ok(Some("+PONG\r\n".to_string())),
         _ => Err(CommandError::InvalidCommand {
             message: "Invalid command".to_string(),
