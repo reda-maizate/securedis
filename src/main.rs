@@ -1,3 +1,23 @@
+extern crate env_logger;
+extern crate log;
+
+use std::io::BufReader;
+use std::net::{TcpListener, TcpStream};
+use std::sync::{Arc, Mutex, MutexGuard};
+use std::thread;
+
+use env_logger::Builder;
+use log::{debug, error, info};
+
+use structs::RESPObject;
+use utils::read_next_line;
+
+use crate::deserialize::{read_header, read_header_or_element};
+use crate::errors::CommandError;
+use crate::storage::main::Storage;
+use crate::utils::{concatenate_contents, process_commands, send_response};
+
+mod deserialize;
 mod errors;
 mod process;
 mod storage;
@@ -5,81 +25,9 @@ mod structs;
 mod tests;
 mod utils;
 
-extern crate env_logger;
-extern crate log;
-
-use crate::errors::CommandError;
-use crate::storage::main::Storage;
-use crate::structs::RESPHeaderType;
-use crate::utils::{concatenate_contents, get_last_element, process_commands, send_response};
-use env_logger::Builder;
-use log::{debug, error, info};
-use std::io::BufReader;
-use std::net::{TcpListener, TcpStream};
-use std::sync::{Arc, Mutex, MutexGuard};
-use std::thread;
-use structs::{RESPElement, RESPHeader, RESPObject};
-use structs::{
-    RESP_ARRAY_SYMBOL, RESP_BULK_STRING_SYMBOL, RESP_ERROR_SYMBOL, RESP_INTEGER_SYMBOL,
-    RESP_SIMPLE_STRING_SYMBOL,
-};
-use utils::{read, read_next_line};
-
 fn configure_logger() {
     let mut builder = Builder::from_default_env();
     builder.init();
-}
-
-fn read_header(input: &mut str) -> RESPElement {
-    let cleaned_chars = read(input);
-    let header: RESPHeader = cleaned_chars.into();
-    header.into()
-}
-
-fn read_header_or_element(input: &mut str, resp_object: &mut RESPObject) {
-    let cleaned_chars = read(input);
-
-    // Check if this line is a header or an element
-    match cleaned_chars[0] {
-        RESP_ARRAY_SYMBOL => {
-            let header: RESPHeader = cleaned_chars.into();
-            let element: RESPElement = header.into();
-            resp_object.elements.push(Some(element));
-        }
-        RESP_BULK_STRING_SYMBOL => {
-            let header: RESPHeader = cleaned_chars.into();
-            let element: RESPElement = header.into();
-            resp_object.elements.push(Some(element));
-        }
-        RESP_INTEGER_SYMBOL => {
-            let header: RESPHeader = cleaned_chars.into();
-            let element: RESPElement = header.into();
-            resp_object.elements.push(Some(element));
-        }
-        RESP_ERROR_SYMBOL => {
-            let header: RESPHeader = cleaned_chars.into();
-            let element: RESPElement = header.into();
-            resp_object.elements.push(Some(element));
-        }
-        RESP_SIMPLE_STRING_SYMBOL => {
-            let header: RESPHeader = cleaned_chars.into();
-            let element: RESPElement = header.into();
-            resp_object.elements.push(Some(element));
-        }
-        // This is an element
-        'A'..='Z' | 'a'..='z' => {
-            let mut last_element = get_last_element(resp_object).unwrap();
-            let chars_to_str: String = cleaned_chars.into_iter().collect();
-            last_element.content = Some(chars_to_str);
-        }
-        '0'..='9' => {
-            let mut last_element = get_last_element(resp_object).unwrap();
-            let chars_to_str: String = cleaned_chars.into_iter().collect();
-            last_element.header.resp_type = Some(RESPHeaderType::Integer);
-            last_element.content = Some(chars_to_str);
-        }
-        _ => error!("Unknown type of data"),
-    }
 }
 
 fn process_request(

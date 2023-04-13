@@ -1,10 +1,12 @@
-use crate::errors::FileError;
-use crate::storage::main::Storage;
+use std::env;
+use std::fs::OpenOptions;
+
 use dashmap::DashMap;
 use lazy_static::lazy_static;
 use log::debug;
-use std::env;
-use std::fs::OpenOptions;
+
+use crate::errors::FileError;
+use crate::storage::main::{Record, Storage};
 
 lazy_static! {
     pub static ref STORAGE_PATH: String =
@@ -13,8 +15,8 @@ lazy_static! {
 
 #[allow(dead_code)]
 pub fn save(storage: Storage, path: &str) {
-    for (key, value) in storage.objects.into_iter() {
-        insert_object_into_csv_file(key, value, Some(path));
+    for (key, record) in storage.objects.into_iter() {
+        insert_object_into_csv_file(key, record.value, Some(path));
     }
 }
 
@@ -44,8 +46,12 @@ fn retrieve_objects_from_csv_file(mut storage: Storage) -> Result<(), FileError>
                 let record = result.unwrap();
                 let key = record.get(0).unwrap();
                 let value = record.get(1).unwrap();
-                // objects.insert(key.to_string(), value.to_string());
-                *objects.entry(key.to_string()).or_insert(value.to_string()) = value.to_string();
+                let expiration = record.get(2).unwrap();
+                let record_obj: Record = Record {
+                    value: value.to_string(),
+                    expiration: Option::from(expiration.parse::<u64>().unwrap()),
+                };
+                *objects.entry(key.to_string()).or_insert(record_obj) = record_obj.clone();
             }
             storage.objects = objects;
             Ok(())

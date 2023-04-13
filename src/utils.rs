@@ -3,6 +3,9 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
 use std::sync::MutexGuard;
 
+use lazy_static::lazy_static;
+use log::debug;
+
 use crate::errors::CommandError;
 use crate::process::{
     process_echo,
@@ -12,9 +15,6 @@ use crate::process::{
     process_set,
 };
 use crate::storage::main::Storage;
-use lazy_static::lazy_static;
-use log::debug;
-
 use crate::structs::{RESPElement, RESPObject};
 use crate::structs::{ECHO_COMMAND, GET_COMMAND, PING_COMMAND, SET_COMMAND};
 
@@ -76,7 +76,7 @@ pub fn process_commands(
         // LOAD_COMMAND => process_load(commands, storage),
         PING_COMMAND => Ok(Some("+PONG\r\n".to_string())),
         _ => Err(CommandError::InvalidCommand {
-            message: "Invalid command".to_string(),
+            message: "-ERR Invalid command".to_string(),
         }),
     }
 }
@@ -91,7 +91,7 @@ pub fn serialize_response(response: Result<Option<String>, CommandError>) -> Str
         Ok(Some(_response)) => _response,
         Ok(None) => "".to_string(),
         Err(err) => {
-            format!("-ERR {}\r\n", err)
+            format!("{}\r\n", err)
         }
     }
 }

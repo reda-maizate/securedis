@@ -1,8 +1,10 @@
+use std::sync::MutexGuard;
+
+use log::error;
+
 use crate::errors::CommandError;
 use crate::storage::main::Storage;
 use crate::utils::check_expected_num_args;
-use log::error;
-use std::sync::MutexGuard;
 
 pub fn process_echo(mut commands: Vec<&str>) -> Result<Option<String>, CommandError> {
     let contains_argument = check_expected_num_args(commands.clone(), 1);
@@ -13,7 +15,7 @@ pub fn process_echo(mut commands: Vec<&str>) -> Result<Option<String>, CommandEr
             Ok(Some(format!("${}\r\n{}\r\n", len_char_msg, message)))
         }
         Err(_e) => Err(CommandError::InvalidNumberOfArguments {
-            message: "Invalid number of arguments".to_string(),
+            message: "-ERR Invalid number of arguments".to_string(),
         }),
     }
 }
@@ -28,21 +30,22 @@ pub fn process_set(
             let key = commands.remove(0);
             let value = commands.remove(0);
 
-            match storage.set(key, value) {
+            // if commands.contains(&"PX") {
+            //
+            // }
+
+            match storage.set(key, value, None) {
                 Ok(_) => Ok(Some("+OK\r\n".to_string())),
                 Err(e) => {
                     error!("Error SET: {:?}", e);
                     Err(CommandError::InvalidCommand {
-                        message: format!(
-                            "Error during insertion of the key-value {}: {}",
-                            key, value
-                        ),
+                        message: "$-1".to_string(),
                     })
                 }
             }
         }
         Err(_e) => Err(CommandError::InvalidNumberOfArguments {
-            message: "Invalid number of arguments".to_string(),
+            message: "-ERR Invalid number of arguments".to_string(),
         }),
     }
 }
@@ -64,13 +67,13 @@ pub fn process_get(
                 Err(_e) => {
                     error!("Error GET: {:?}", _e);
                     Err(CommandError::InvalidCommand {
-                        message: format!("Key {} not found", key),
+                        message: "$-1\r\n".to_string(),
                     })
                 }
             }
         }
         Err(_e) => Err(CommandError::InvalidNumberOfArguments {
-            message: "Invalid number of arguments".to_string(),
+            message: "-ERR Invalid number of arguments".to_string(),
         }),
     }
 }
