@@ -96,7 +96,7 @@ impl From<Vec<char>> for RESPHeader {
         match resp_type {
             RESPHeaderType::Array => RESPHeader {
                 resp_type: Some(RESPHeaderType::Array),
-                num_of_elements: Some((num_of_elements * 2) as i32),
+                num_of_elements: Some(num_of_elements * 2),
             },
             _ => RESPHeader {
                 resp_type: Some(resp_type),

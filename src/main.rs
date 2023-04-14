@@ -43,6 +43,7 @@ fn handle_connection(
     stream: TcpStream,
     storage: MutexGuard<Storage>,
 ) -> (TcpStream, Result<Option<String>, CommandError>) {
+    // debug!("New connection: {:?}", stream);
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut input = String::new();
 
