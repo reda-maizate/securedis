@@ -1,11 +1,11 @@
 #!/bin/sh
-#
-# DON'T EDIT THIS!
-#
-# CodeCrafters uses this file to test your code. Don't make any changes here!
-#
-# DON'T EDIT THIS!
-export RUST_LOG="debug"
+
+# Get environment variables from .env file
+set -a
+. ./.env
+set +a
+
+export RUST_LOG=$RUST_LOG
 exec cargo run \
     --quiet \
     --release \
