@@ -21,3 +21,6 @@ Cargo.lock
 
 # Data storage
 src/data.csv
+
+# Mac OS
+.DS_Store
