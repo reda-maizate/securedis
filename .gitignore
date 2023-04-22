@@ -13,8 +13,9 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 
-# JetBrains IDEA
+# JetBrains
 .idea
+securedis.iml
 
 # Environment variables
 .env
