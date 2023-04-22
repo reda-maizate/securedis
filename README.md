@@ -1,10 +1,10 @@
-# SecuRedis
+# Secu-redis
 
-SecuRedis is a mini-Redis server that will provide a simple way to encrypt and decrypt your data.
+Secu-redis is a (mini) redis server that will provide a simple way to encrypt and decrypt your data.
 
 🚧 **_Currently, in development_** 🚧
 
-Right now, the server can operate basic Redis commands, but it does not encrypt or decrypt the data.
+⚠️ *Right now, the server can operate basic Redis commands, but it does not encrypt or decrypt the data.*
 
 ## Commands supported
 - [X] PING
@@ -15,6 +15,11 @@ Right now, the server can operate basic Redis commands, but it does not encrypt 
 - [ ] SAVE (to a CSV file)
 - [ ] KEYS
 - [ ] DEL
+
+## Data types supported
+- [X] Strings
+- [X] Integers
+- [ ] Lists
 
 ## Prerequisites
 1. Make sure you have `rust` installed (if not https://www.rust-lang.org/tools/install)
