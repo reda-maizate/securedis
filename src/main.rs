@@ -72,7 +72,7 @@ fn handle_connection(
 
 fn main() {
     configure_logger();
-    info!("Reda's server is now started...");
+    info!("Securedis server is now started...");
     let listener = Arc::new(Mutex::new(TcpListener::bind("127.0.0.1:6379").unwrap()));
     let storage = Arc::new(Mutex::new(Storage::new()));
 

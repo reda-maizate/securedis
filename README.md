@@ -1,6 +1,6 @@
-# Secu-redis
+# Securedis
 
-Secu-redis is a (mini) redis server that will provide a simple way to encrypt and decrypt your data.
+Securedis is a (mini) redis server that will provide a simple way to encrypt and decrypt your data.
 
 🚧 **_Currently, in development_** 🚧
 
